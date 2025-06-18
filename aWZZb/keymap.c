@@ -190,13 +190,13 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (get_mods() & MOD_LCTL) {
                 switch (keycode) {
                     case KC_QUOTE:
-                        tap_code(KC_COPY);
+                        tap_code16(KC_C);
                         return false;
                     case KC_COMMA:
-                        tap_code(KC_PASTE);
+                        tap_code16(KC_V);
                         return false;
                     case KC_SCLN:
-                        tap_code(KC_UNDO);
+                        tap_code16(KC_Z);
                         return false;
                 }
             }
