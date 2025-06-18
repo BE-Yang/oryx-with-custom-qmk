@@ -436,22 +436,6 @@ tap_dance_action_t tap_dance_actions[] = {
         [DANCE_4] = ACTION_TAP_DANCE_FN_ADVANCED(on_dance_4, dance_4_finished, dance_4_reset),
 };
 
-# const key_override_t quote_copy_override = ko_make_basic(MOD_MASK_CTRL, KC_QUOTE, KC_COPY);
-# const key_override_t comma_paste_override = ko_make_basic(MOD_MASK_CTRL, KC_COMMA, KC_PASTE);
-# const key_override_t semicolon_undo_override = ko_make_basic(MOD_MASK_CTRL, KC_SCLN, KC_UNDO);
-
-// This statically defines all key overrides to be used
-# static const key_override_t *local_key_overrides[] = {
-#  &quote_copy_override,
-#  &comma_paste_override,
-#  &semicolon_undo_override,
-#  NULL
-# };
-// static const key_override_t *no_overrides[] = { NULL };
-
-// Global pointer QMK uses
-# const key_override_t **key_overrides = local_key_overrides;
-
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     if (record->event.pressed) {
         // Only on layer 0
