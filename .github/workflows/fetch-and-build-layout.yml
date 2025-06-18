@@ -126,7 +126,8 @@ jobs:
           
           # Find and export built layout          
           # Normalize layout name (slashes to underscores)
-          normalized_layout_geometry="$(echo "${{ github.event.inputs.layout_geometry }}" | sed 's/\//_/g')"
+          keyboard_target="$(basename "${{ github.event.inputs.layout_geometry }}")"
+          normalized_layout_geometry="ergodox_ez_${keyboard_target}"
           layout_id="${{ github.event.inputs.layout_id }}"
           
           # Construct expected filename
