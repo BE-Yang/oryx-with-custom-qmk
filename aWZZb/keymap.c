@@ -213,6 +213,43 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   return true;
 }
 
+uint16_t layer_state_set_user(uint16_t state) {
+    uint8_t layer = biton16(state);
+  ergodox_board_led_off();
+  ergodox_right_led_1_off();
+  ergodox_right_led_2_off();
+  ergodox_right_led_3_off();
+  switch (layer) {
+    case 1:
+      ergodox_right_led_1_on();
+      break;
+    case 2:
+      ergodox_right_led_2_on();
+      break;
+    case 3:
+      ergodox_right_led_3_on();
+      break;
+    case 4:
+      ergodox_right_led_1_on();
+      ergodox_right_led_2_on();
+      break;
+    case 5:
+      ergodox_right_led_1_on();
+      ergodox_right_led_3_on();
+      break;
+    case 6:
+      ergodox_right_led_2_on();
+      ergodox_right_led_3_on();
+      break;
+    case 7:
+      ergodox_right_led_1_on();
+      ergodox_right_led_2_on();
+      ergodox_right_led_3_on();
+      break;
+    default:
+      break;
+  }
+
 typedef struct {
     bool is_press_action;
     uint8_t step;
@@ -418,59 +455,40 @@ tap_dance_action_t tap_dance_actions[] = {
         [DANCE_4] = ACTION_TAP_DANCE_FN_ADVANCED(on_dance_4, dance_4_finished, dance_4_reset),
 };
 
-const key_override_t quote_copy_override = ko_make_basic(MOD_MASK_CTRL, KC_QUOTE, KC_COPY);
-const key_override_t comma_paste_override = ko_make_basic(MOD_MASK_CTRL, KC_COMMA, KC_PASTE);
-const key_override_t semicolon_undo_override = ko_make_basic(MOD_MASK_CTRL, KC_SCLN, KC_UNDO);
+# const key_override_t quote_copy_override = ko_make_basic(MOD_MASK_CTRL, KC_QUOTE, KC_COPY);
+# const key_override_t comma_paste_override = ko_make_basic(MOD_MASK_CTRL, KC_COMMA, KC_PASTE);
+# const key_override_t semicolon_undo_override = ko_make_basic(MOD_MASK_CTRL, KC_SCLN, KC_UNDO);
 
 // This statically defines all key overrides to be used
-static const key_override_t *local_key_overrides[] = {
-  &quote_copy_override,
-  &comma_paste_override,
-  &semicolon_undo_override,
-  NULL
-};
+# static const key_override_t *local_key_overrides[] = {
+#  &quote_copy_override,
+#  &comma_paste_override,
+#  &semicolon_undo_override,
+#  NULL
+# };
 // static const key_override_t *no_overrides[] = { NULL };
 
 // Global pointer QMK uses
-const key_override_t **key_overrides = local_key_overrides;
-// overrides based on layers
+# const key_override_t **key_overrides = local_key_overrides;
 
-uint16_t layer_state_set_user(uint16_t state) {
-    uint8_t layer = biton16(state);
-  ergodox_board_led_off();
-  ergodox_right_led_1_off();
-  ergodox_right_led_2_off();
-  ergodox_right_led_3_off();
-  switch (layer) {
-    case 1:
-      ergodox_right_led_1_on();
-      break;
-    case 2:
-      ergodox_right_led_2_on();
-      break;
-    case 3:
-      ergodox_right_led_3_on();
-      break;
-    case 4:
-      ergodox_right_led_1_on();
-      ergodox_right_led_2_on();
-      break;
-    case 5:
-      ergodox_right_led_1_on();
-      ergodox_right_led_3_on();
-      break;
-    case 6:
-      ergodox_right_led_2_on();
-      ergodox_right_led_3_on();
-      break;
-    case 7:
-      ergodox_right_led_1_on();
-      ergodox_right_led_2_on();
-      ergodox_right_led_3_on();
-      break;
-    default:
-      key_overrides = local_key_overrides;
-      break;
-  }
-  return state;
-};
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    if (record->event.pressed) {
+        // Only on layer 0
+        if (biton32(layer_state) == 0) {
+            if (get_mods() & MOD_MASK_CTRL) {
+                switch (keycode) {
+                    case KC_QUOTE:
+                        tap_code(KC_COPY);
+                        return false;
+                    case KC_COMMA:
+                        tap_code(KC_PASTE);
+                        return false;
+                    case KC_SCLN:
+                        tap_code(KC_UNDO);
+                        return false;
+                }
+            }
+        }
+    }
+    return true;
+}
