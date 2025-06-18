@@ -125,19 +125,16 @@ jobs:
           "
           
           # Find and export built layout          
+          # Normalize layout name (slashes to underscores)
           normalized_layout_geometry="$(echo "${{ github.event.inputs.layout_geometry }}" | sed 's/\//_/g')"
+          layout_id="${{ github.event.inputs.layout_id }}"
           
-          layout_file=$(find ./build -maxdepth 1 -type f -regex ".*${normalized_layout_geometry}.*\.\(bin\|hex\)$")
-          if [ -z "$layout_file" ]; then
-            echo "❌ No built layout file found!"
-            exit 1
-          fi
+          # Construct expected filename
+          built_file=".build/${normalized_layout_geometry}_${layout_id}.hex"
           
-          echo "built_layout_file=$layout_file" >> $GITHUB_OUTPUT
-
-          echo built_layout_file=".build/${normalized_layout_geometry}_${{ github.event.inputs.layout_id }}.hex" >> "$GITHUB_OUTPUT"
-
-          echo normalized_layout_geometry=${normalized_layout_geometry} >> "$GITHUB_OUTPUT"
+          # Export
+          echo "built_layout_file=${built_file}" >> "$GITHUB_OUTPUT"
+          echo "normalized_layout_geometry=${normalized_layout_geometry}" >> "$GITHUB_OUTPUT"
 
       - name: Upload layout
         uses: actions/upload-artifact@v4
