@@ -429,7 +429,7 @@ static const key_override_t *local_key_overrides[] = {
   &semicolon_undo_override,
   NULL
 };
-static const key_override_t *no_overrides[] = { NULL };
+// static const key_override_t *no_overrides[] = { NULL };
 
 // Global pointer QMK uses
 const key_override_t **key_overrides = local_key_overrides;
