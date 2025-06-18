@@ -127,7 +127,7 @@ jobs:
           # Find and export built layout          
           normalized_layout_geometry="$(echo "${{ github.event.inputs.layout_geometry }}" | sed 's/\//_/g')"
           
-          layout_file=$(find ./qmk_firmware -maxdepth 1 -type f -regex ".*${normalized_layout_geometry}.*\.\(bin\|hex\)$")
+          layout_file=$(find ./build -maxdepth 1 -type f -regex ".*${normalized_layout_geometry}.*\.\(bin\|hex\)$")
           if [ -z "$layout_file" ]; then
             echo "❌ No built layout file found!"
             exit 1
@@ -135,7 +135,8 @@ jobs:
           
           echo "built_layout_file=$layout_file" >> $GITHUB_OUTPUT
 
-          echo "built_layout_file=$(find ./qmk_firmware -maxdepth 1 -type f -regex ".*${normalized_layout_geometry}.*\.\(bin\|hex\)$")" >> $GITHUB_OUTPUT
+          echo built_layout_file=".build/${normalized_layout_geometry}_${{ github.event.inputs.layout_id }}.hex" >> "$GITHUB_OUTPUT"
+
           echo normalized_layout_geometry=${normalized_layout_geometry} >> "$GITHUB_OUTPUT"
 
       - name: Upload layout
