@@ -457,3 +457,14 @@ tap_dance_action_t tap_dance_actions[] = {
         [DANCE_3] = ACTION_TAP_DANCE_FN_ADVANCED(on_dance_3, dance_3_finished, dance_3_reset),
         [DANCE_4] = ACTION_TAP_DANCE_FN_ADVANCED(on_dance_4, dance_4_finished, dance_4_reset),
 };
+
+const key_override_t quote_copy_override = ko_make_basic(MOD_MASK_CTRL, KC_QUOTE, KC_COPY);
+const key_override_t comma_paste_override = ko_make_basic(MOD_MASK_CTRL, KC_COMMA, KC_PASTE);
+const key_override_t semicolon_undo_override = ko_make_basic(MOD_MASK_CTRL, KC_SCLN, KC_UNDO);
+
+// This globally defines all key overrides to be used
+const key_override_t *key_overrides[] = {
+  &quote_copy_override,
+  &comma_paste_override,
+  &semicolon_undo_override
+};
