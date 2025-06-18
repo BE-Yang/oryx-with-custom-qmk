@@ -44,6 +44,7 @@ jobs:
         run: |
           response=$(curl --location 'https://oryx.zsa.io/graphql' --header 'Content-Type: application/json' --data '{"query":"query getLayout($hashId: String!, $revisionId: String!, $geometry: String) {layout(hashId: $hashId, geometry: $geometry, revisionId: $revisionId) {  revision { hashId, qmkVersion, title }}}","variables":{"hashId":"${{ github.event.inputs.layout_id }}","geometry":"${{ github.event.inputs.layout_geometry }}","revisionId":"latest"}}' | jq '.data.layout.revision | [.hashId, .qmkVersion, .title]')
           hash_id=$(echo "${response}" | jq -r '.[0]')
+          echo "${response}"
           firmware_version=$(printf "%.0f" $(echo "${response}" | jq -r '.[1]'))
           change_description=$(echo "${response}" | jq -r '.[2]')
           if [[ -z "${change_description}" ]]; then
