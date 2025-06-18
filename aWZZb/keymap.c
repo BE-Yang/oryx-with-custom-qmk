@@ -462,10 +462,22 @@ const key_override_t quote_copy_override = ko_make_basic(MOD_MASK_CTRL, KC_QUOTE
 const key_override_t comma_paste_override = ko_make_basic(MOD_MASK_CTRL, KC_COMMA, KC_PASTE);
 const key_override_t semicolon_undo_override = ko_make_basic(MOD_MASK_CTRL, KC_SCLN, KC_UNDO);
 
-// This globally defines all key overrides to be used
-const key_override_t *key_overrides[] = {
+// This statically defines all key overrides to be used
+static const key_override_t *local_key_overrides[] = {
   &quote_copy_override,
   &comma_paste_override,
   &semicolon_undo_override,
   NULL
 };
+
+// Global pointer QMK uses
+extern const key_override_t **key_overrides = local_key_overrides;
+// overrides based on layers
+layer_state_t layer_state_set_user(layer_state_t state) {
+    if (layer_state_cmp(state, 0)) {
+        key_overrides = local_key_overrides;
+    } else {
+        key_overrides = no_overrides;
+    }
+    return state;
+}
