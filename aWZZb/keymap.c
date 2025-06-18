@@ -466,5 +466,6 @@ const key_override_t semicolon_undo_override = ko_make_basic(MOD_MASK_CTRL, KC_S
 const key_override_t *key_overrides[] = {
   &quote_copy_override,
   &comma_paste_override,
-  &semicolon_undo_override
+  &semicolon_undo_override,
+  NULL
 };
