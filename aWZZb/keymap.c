@@ -184,7 +184,26 @@ bool rgb_matrix_indicators_user(void) {
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-  switch (keycode) {
+    if (record->event.pressed) {
+        // Only on layer 0
+        if (biton32(layer_state) == 0) {
+            if (get_mods() & MOD_MASK_CTRL) {
+                switch (keycode) {
+                    case KC_QUOTE:
+                        tap_code(KC_COPY);
+                        return false;
+                    case KC_COMMA:
+                        tap_code(KC_PASTE);
+                        return false;
+                    case KC_SCLN:
+                        tap_code(KC_UNDO);
+                        return false;
+                }
+            }
+        }
+    }
+  
+    switch (keycode) {
 
     case RGB_SLD:
       if (record->event.pressed) {
@@ -248,7 +267,9 @@ uint16_t layer_state_set_user(uint16_t state) {
         break;
       default:
         break;
-    }}
+    }
+  return state;
+  }
 
 typedef struct {
     bool is_press_action;
@@ -435,25 +456,3 @@ tap_dance_action_t tap_dance_actions[] = {
         [DANCE_3] = ACTION_TAP_DANCE_FN_ADVANCED(on_dance_3, dance_3_finished, dance_3_reset),
         [DANCE_4] = ACTION_TAP_DANCE_FN_ADVANCED(on_dance_4, dance_4_finished, dance_4_reset),
 };
-
-bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    if (record->event.pressed) {
-        // Only on layer 0
-        if (biton32(layer_state) == 0) {
-            if (get_mods() & MOD_MASK_CTRL) {
-                switch (keycode) {
-                    case KC_QUOTE:
-                        tap_code(KC_COPY);
-                        return false;
-                    case KC_COMMA:
-                        tap_code(KC_PASTE);
-                        return false;
-                    case KC_SCLN:
-                        tap_code(KC_UNDO);
-                        return false;
-                }
-            }
-        }
-    }
-    return true;
-}
