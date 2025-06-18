@@ -187,7 +187,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     if (record->event.pressed) {
         // Only on layer 0
         if (biton32(layer_state) == 0) {
-            if (get_mods() & MOD_MASK_CTRL) {
+            if (get_mods() & MOD_LCTL) {
                 switch (keycode) {
                     case KC_QUOTE:
                         tap_code(KC_COPY);
