@@ -215,40 +215,40 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
 uint16_t layer_state_set_user(uint16_t state) {
     uint8_t layer = biton16(state);
-  ergodox_board_led_off();
-  ergodox_right_led_1_off();
-  ergodox_right_led_2_off();
-  ergodox_right_led_3_off();
-  switch (layer) {
-    case 1:
-      ergodox_right_led_1_on();
-      break;
-    case 2:
-      ergodox_right_led_2_on();
-      break;
-    case 3:
-      ergodox_right_led_3_on();
-      break;
-    case 4:
-      ergodox_right_led_1_on();
-      ergodox_right_led_2_on();
-      break;
-    case 5:
-      ergodox_right_led_1_on();
-      ergodox_right_led_3_on();
-      break;
-    case 6:
-      ergodox_right_led_2_on();
-      ergodox_right_led_3_on();
-      break;
-    case 7:
-      ergodox_right_led_1_on();
-      ergodox_right_led_2_on();
-      ergodox_right_led_3_on();
-      break;
-    default:
-      break;
-  }
+    ergodox_board_led_off();
+    ergodox_right_led_1_off();
+    ergodox_right_led_2_off();
+    ergodox_right_led_3_off();
+    switch (layer) {
+      case 1:
+        ergodox_right_led_1_on();
+        break;
+      case 2:
+        ergodox_right_led_2_on();
+        break;
+      case 3:
+        ergodox_right_led_3_on();
+        break;
+      case 4:
+        ergodox_right_led_1_on();
+        ergodox_right_led_2_on();
+        break;
+      case 5:
+        ergodox_right_led_1_on();
+        ergodox_right_led_3_on();
+        break;
+      case 6:
+        ergodox_right_led_2_on();
+        ergodox_right_led_3_on();
+        break;
+      case 7:
+        ergodox_right_led_1_on();
+        ergodox_right_led_2_on();
+        ergodox_right_led_3_on();
+        break;
+      default:
+        break;
+    }
 
 typedef struct {
     bool is_press_action;
@@ -265,8 +265,6 @@ enum {
 };
 
 static tap dance_state[5];
-
-uint8_t dance_step(tap_dance_state_t *state);
 
 uint8_t dance_step(tap_dance_state_t *state) {
     if (state->count == 1) {
