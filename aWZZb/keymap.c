@@ -248,7 +248,7 @@ uint16_t layer_state_set_user(uint16_t state) {
         break;
       default:
         break;
-    }
+    }}
 
 typedef struct {
     bool is_press_action;
