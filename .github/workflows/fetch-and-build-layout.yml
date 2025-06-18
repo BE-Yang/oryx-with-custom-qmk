@@ -110,9 +110,18 @@ jobs:
           mkdir -p ${keyboard_directory}/${{ github.event.inputs.layout_geometry }}/keymaps && cp -r ${{ github.event.inputs.layout_id }} "$_"
           
           # Build the layout
+          keyboard_dir="qmk_firmware/keyboards/ergodox_ez"
+          keymap_dir="${keyboard_dir}/keymaps/${{ github.event.inputs.layout_id }}"
+          
+          rm -rf "$keymap_dir"
+          mkdir -p "$keymap_dir"
+          cp -r "./${{ github.event.inputs.layout_id }}/." "$keymap_dir/"
+          
           docker run -v ./qmk_firmware:/root --rm qmk /bin/sh -c "
+            set -x
             qmk setup zsa/qmk_firmware -b firmware${{ steps.download-layout-source.outputs.firmware_version }} -y
-            make ${make_prefix}${{ github.event.inputs.layout_geometry }}:${{ github.event.inputs.layout_id }}
+            # make ${make_prefix}${{ github.event.inputs.layout_geometry }}:${{ github.event.inputs.layout_id }}
+            make ergodox_ez:${{ github.event.inputs.layout_id }}
           "
           
           # Find and export built layout          
