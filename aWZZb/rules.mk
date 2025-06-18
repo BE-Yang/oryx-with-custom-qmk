@@ -12,4 +12,4 @@ LTO_ENABLE = yes
 
 
 # Custom QMK
-KEY_OVERRIDE_ENABLE = yes
+# KEY_OVERRIDE_ENABLE = yes
