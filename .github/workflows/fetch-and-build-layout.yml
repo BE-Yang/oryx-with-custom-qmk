@@ -78,6 +78,13 @@ jobs:
 
       - name: Update QMK firmware submodule to latest version (${{ steps.download-layout-source.outputs.firmware_version }})
         run: |
+         # Deinitialize submodule if it already exists
+          if [ -d "qmk_firmware" ]; then
+            git submodule deinit -f qmk_firmware || true
+            rm -rf .git/modules/qmk_firmware
+            rm -rf qmk_firmware
+          fi
+          
           git submodule update --init --remote
           # git submodule update --init --remote --depth=1
           cd qmk_firmware
