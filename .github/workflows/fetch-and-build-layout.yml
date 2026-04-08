@@ -100,50 +100,30 @@ jobs:
       - name: Build qmk docker image
         run: docker build -t qmk .
 
-      - name: Build the layout
+      - name: Build the layout (ErgoDox EZ Glow)
         id: build-layout
         run: |
-          # Set keyboard directory and make prefix based on firmware version
-          if [ "${{ steps.download-layout-source.outputs.firmware_version }}" -ge 24 ]; then
-            keyboard_directory="qmk_firmware/keyboards/zsa"
-            make_prefix="zsa/"
-          else
-            keyboard_directory="qmk_firmware/keyboards"
-            make_prefix=""
-          fi
-          
-          # Copy layout files to the qmk folder
-          rm -rf ${keyboard_directory}/${{ github.event.inputs.layout_geometry }}/keymaps/${{ github.event.inputs.layout_id }}
-          mkdir -p ${keyboard_directory}/${{ github.event.inputs.layout_geometry }}/keymaps && cp -r ${{ github.event.inputs.layout_id }} "$_"
-          
-          # Build the layout
-          # keyboard_dir="qmk_firmware/keyboards/ergodox_ez/glow"
-          # keymap_dir="${keyboard_dir}/keymaps/${{ github.event.inputs.layout_id }}"
           layout_id="${{ github.event.inputs.layout_id }}"
-
-          keymap_dir="qmk_firmware/keyboards/ergodox_ez/keymaps/${layout_id}"
+          keymap_name="glow_${layout_id}"
+      
+          # Copy Oryx layout into QMK keymap for EZ Glow
+          keymap_dir="qmk_firmware/keyboards/ergodox_ez/keymaps/${keymap_name}"
           rm -rf "${keymap_dir}"
           mkdir -p "${keymap_dir}"
           cp -r "./${layout_id}/." "${keymap_dir}/"
-          
+      
+          # Build for ErgoDox EZ Glow
           docker run -v ./qmk_firmware:/root --rm qmk /bin/sh -c "
             set -x
             cd /root
-            make ergodox_ez:${layout_id}
+            make ergodox_ez:${keymap_name}
           "
-          
-          built_file="ergodox_ez_${layout_id}.hex"
-          
+      
+          built_file="ergodox_ez_${keymap_name}.hex"   # ergodox_ez_glow_aWZZb.hex
+      
           echo "built_layout_file=${built_file}" >> "$GITHUB_OUTPUT"
-          
-          # Find and export built layout          
-          # Normalize layout name (slashes to underscores)
-          keyboard_target="$(basename "${{ github.event.inputs.layout_geometry }}")"
-          normalized_layout_geometry="ergodox_ez_${keyboard_target}"
-          layout_id="${{ github.event.inputs.layout_id }}"
-          
-          # Construct expected filename
-          built_file="${normalized_layout_geometry}_${layout_id}.hex"
+          echo "keyboard_target=ergodox_ez_glow" >> "$GITHUB_OUTPUT"
+          echo "layout_id=${layout_id}" >> "$GITHUB_OUTPUT"
           
           # Export
           echo "built_layout_file=${built_file}" >> "$GITHUB_OUTPUT"
@@ -152,5 +132,5 @@ jobs:
       - name: Upload layout
         uses: actions/upload-artifact@v4
         with:
-          name: ergodox_ez_${{ github.event.inputs.layout_id }}
+          name: ergodox_ez_glow_${{ steps.build-layout.outputs.layout_id }}
           path: ${{ steps.build-layout.outputs.built_layout_file }}
