@@ -112,35 +112,27 @@ jobs:
             make_prefix=""
           fi
           
-          # Copy layout files to the qmk folder
+          # Copy layout files
           rm -rf ${keyboard_directory}/${{ github.event.inputs.layout_geometry }}/keymaps/${{ github.event.inputs.layout_id }}
           mkdir -p ${keyboard_directory}/${{ github.event.inputs.layout_geometry }}/keymaps && cp -r ${{ github.event.inputs.layout_id }} "$_"
-          
-          # Build the layout
-          keyboard_dir="qmk_firmware/keyboards/ergodox_ez/glow"
-          keymap_dir="${keyboard_dir}/keymaps/${{ github.event.inputs.layout_id }}"
-          
-          rm -rf "$keymap_dir"
-          mkdir -p "$keymap_dir"
-          cp -r "./${{ github.event.inputs.layout_id }}/." "$keymap_dir/"
-          
+      
+          # Build
           docker run -v ./qmk_firmware:/root --rm qmk /bin/sh -c "
             set -x
-            # qmk setup zsa/qmk_firmware -b firmware${{ steps.download-layout-source.outputs.firmware_version }} -y
-            # make ${make_prefix}${{ github.event.inputs.layout_geometry }}:${{ github.event.inputs.layout_id }}
+            cd /root
             make ${make_prefix}${{ github.event.inputs.layout_geometry }}:${{ github.event.inputs.layout_id }}
-            "
-          
-          # Find and export built layout          
-          # Normalize layout name (slashes to underscores)
+          "
+      
+          # Move the .hex from root of repo to a predictable place
+          # The file is named: ergodox_ez_glow_aWZZb.hex
           keyboard_target="$(basename "${{ github.event.inputs.layout_geometry }}")"
           normalized_layout_geometry="ergodox_ez_${keyboard_target}"
           layout_id="${{ github.event.inputs.layout_id }}"
-          
-          # Construct expected filename
           built_file="${normalized_layout_geometry}_${layout_id}.hex"
-          
-          # Export
+      
+          # Copy the hex file from repo root to qmk_firmware so artifacts can find it
+          cp "${built_file}" "qmk_firmware/${built_file}"
+      
           echo "built_layout_file=${built_file}" >> "$GITHUB_OUTPUT"
           echo "normalized_layout_geometry=${normalized_layout_geometry}" >> "$GITHUB_OUTPUT"
 
