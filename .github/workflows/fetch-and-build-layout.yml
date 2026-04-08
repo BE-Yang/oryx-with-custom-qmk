@@ -88,7 +88,7 @@ jobs:
         
             cd qmk_firmware
             git fetch origin
-            git checkout oryx
+            git checkout firmware25
             git submodule sync --recursive
             git submodule update --init --recursive
             cd ..
