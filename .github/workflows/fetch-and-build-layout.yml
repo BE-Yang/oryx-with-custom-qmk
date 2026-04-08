@@ -35,6 +35,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: oryx
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: recursive
+          fetch-depth: 0
 
       - name: Download the full history for the merge to work correctly
         run: git pull --unshallow
@@ -77,25 +80,26 @@ jobs:
           git push
 
       - name: Update QMK firmware submodule to latest version (${{ steps.download-layout-source.outputs.firmware_version }})
-        run: |
-         # Deinitialize submodule if it already exists
-          if [ -d "qmk_firmware" ]; then
-            git submodule deinit -f qmk_firmware || true
-            rm -rf .git/modules/qmk_firmware
-            rm -rf qmk_firmware
-          fi
-          
-          git submodule update --init --remote
-          # git submodule update --init --remote --depth=1
-          cd qmk_firmware
-          git fetch origin firmware${{ steps.download-layout-source.outputs.firmware_version }}
-          git checkout -B firmware${{ steps.download-layout-source.outputs.firmware_version }} origin/firmware${{ steps.download-layout-source.outputs.firmware_version }}
-          # git checkout -B firmware${{ steps.download-layout-source.outputs.firmware_version }} origin/zsa
-          git submodule update --init --recursive
-          cd ..
-          git add qmk_firmware
-          git commit -m "✨(qmk): Update firmware" || echo "No QMK change"
-          git push
+       - name: Update QMK firmware submodule
+         run: |
+            if [ -d "qmk_firmware" ]; then
+              git submodule deinit -f qmk_firmware || true
+              rm -rf .git/modules/qmk_firmware
+              rm -rf qmk_firmware
+            fi
+        
+            git submodule update --init --recursive
+        
+            cd qmk_firmware
+            git fetch origin
+            git checkout oryx
+            git submodule sync --recursive
+            git submodule update --init --recursive
+            cd ..
+        
+            git add qmk_firmware
+            git commit -m "✨(qmk): Update firmware" || echo "No QMK change"
+            git push
 
       - name: Build qmk docker image
         run: docker build -t qmk .
@@ -126,9 +130,9 @@ jobs:
           
           docker run -v ./qmk_firmware:/root --rm qmk /bin/sh -c "
             set -x
-            qmk setup zsa/qmk_firmware -b firmware${{ steps.download-layout-source.outputs.firmware_version }} -y
+            # qmk setup zsa/qmk_firmware -b firmware${{ steps.download-layout-source.outputs.firmware_version }} -y
             # make ${make_prefix}${{ github.event.inputs.layout_geometry }}:${{ github.event.inputs.layout_id }}
-            make ergodox_ez/glow:${{ github.event.inputs.layout_id }}
+            make ${make_prefix}${{ github.event.inputs.layout_geometry }}:${{ github.event.inputs.layout_id }
           "
           
           # Find and export built layout          
