@@ -117,19 +117,24 @@ jobs:
           mkdir -p ${keyboard_directory}/${{ github.event.inputs.layout_geometry }}/keymaps && cp -r ${{ github.event.inputs.layout_id }} "$_"
           
           # Build the layout
-          keyboard_dir="qmk_firmware/keyboards/ergodox_ez/glow"
-          keymap_dir="${keyboard_dir}/keymaps/${{ github.event.inputs.layout_id }}"
-          
-          rm -rf "$keymap_dir"
-          mkdir -p "$keymap_dir"
-          cp -r "./${{ github.event.inputs.layout_id }}/." "$keymap_dir/"
+          # keyboard_dir="qmk_firmware/keyboards/ergodox_ez/glow"
+          # keymap_dir="${keyboard_dir}/keymaps/${{ github.event.inputs.layout_id }}"
+          layout_id="${{ github.event.inputs.layout_id }}"
+
+          keymap_dir="qmk_firmware/keyboards/ergodox_ez/keymaps/${layout_id}"
+          rm -rf "${keymap_dir}"
+          mkdir -p "${keymap_dir}"
+          cp -r "./${layout_id}/." "${keymap_dir}/"
           
           docker run -v ./qmk_firmware:/root --rm qmk /bin/sh -c "
             set -x
-            # qmk setup zsa/qmk_firmware -b firmware${{ steps.download-layout-source.outputs.firmware_version }} -y
-            # make ${make_prefix}${{ github.event.inputs.layout_geometry }}:${{ github.event.inputs.layout_id }}
-            make ${make_prefix}${{ github.event.inputs.layout_geometry }}:${{ github.event.inputs.layout_id }}
-            "
+            cd /root
+            make ergodox_ez:${layout_id}
+          "
+          
+          built_file="ergodox_ez_${layout_id}.hex"
+          
+          echo "built_layout_file=${built_file}" >> "$GITHUB_OUTPUT"
           
           # Find and export built layout          
           # Normalize layout name (slashes to underscores)
@@ -147,5 +152,5 @@ jobs:
       - name: Upload layout
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.build-layout.outputs.normalized_layout_geometry }}_${{ github.event.inputs.layout_id }}
+          name: ergodox_ez_${{ github.event.inputs.layout_id }}
           path: ${{ steps.build-layout.outputs.built_layout_file }}
