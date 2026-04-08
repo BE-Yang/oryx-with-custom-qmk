@@ -80,8 +80,7 @@ jobs:
           git push
 
       - name: Update QMK firmware submodule to latest version (${{ steps.download-layout-source.outputs.firmware_version }})
-       - name: Update QMK firmware submodule
-         run: |
+        run: |
             if [ -d "qmk_firmware" ]; then
               git submodule deinit -f qmk_firmware || true
               rm -rf .git/modules/qmk_firmware
