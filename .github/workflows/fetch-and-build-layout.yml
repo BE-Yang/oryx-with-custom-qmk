@@ -116,7 +116,7 @@ jobs:
           docker run -v ./qmk_firmware:/root --rm qmk /bin/sh -c "
             set -x
             cd /root
-            make ergodox_ez:${keymap_name}
+            qmk compile -kb ergodox_ez/glow -km oryx
           "
       
           built_file="ergodox_ez_${keymap_name}.hex"   # ergodox_ez_glow_aWZZb.hex
