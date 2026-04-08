@@ -31,45 +31,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository (oryx branch)
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           ref: oryx
-          submodules: recursive
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download the full history for the merge to work correctly
-        run: git pull --unshallow || true
+        run: git pull --unshallow
 
       - name: Download layout source
         id: download-layout-source
         run: |
-          response=$(curl --location 'https://oryx.zsa.io/graphql' \
-            --header 'Content-Type: application/json' \
-            --data '{
-              "query":"query getLayout($hashId: String!, $revisionId: String!, $geometry: String) {layout(hashId: $hashId, geometry: $geometry, revisionId: $revisionId) {  revision { hashId, qmkVersion, title }}}",
-              "variables":{"hashId":"${{ github.event.inputs.layout_id }}","geometry":"${{ github.event.inputs.layout_geometry }}","revisionId":"latest"}
-            }' | jq '.data.layout.revision | [.hashId, .qmkVersion, .title]')
-
+          response=$(curl --location 'https://oryx.zsa.io/graphql' --header 'Content-Type: application/json' --data '{"query":"query getLayout($hashId: String!, $revisionId: String!, $geometry: String) {layout(hashId: $hashId, geometry: $geometry, revisionId: $revisionId) {  revision { hashId, qmkVersion, title }}}","variables":{"hashId":"${{ github.event.inputs.layout_id }}","geometry":"${{ github.event.inputs.layout_geometry }}","revisionId":"latest"}}' | jq '.data.layout.revision | [.hashId, .qmkVersion, .title]')
           hash_id=$(echo "${response}" | jq -r '.[0]')
+          echo "${response}"
           firmware_version=$(printf "%.0f" $(echo "${response}" | jq -r '.[1]'))
           change_description=$(echo "${response}" | jq -r '.[2]')
           if [[ -z "${change_description}" ]]; then
             change_description="latest layout modification made with Oryx"
           fi
-
-          echo "Downloading layout source with hash_id = ${hash_id}, firmware_version = ${firmware_version}"
-
+          
           curl -L "https://oryx.zsa.io/source/${hash_id}" -o source.zip
-
-          echo "firmware_version=${firmware_version}" >> "$GITHUB_OUTPUT"
-          echo "change_description=${change_description}" >> "$GITHUB_OUTPUT"
+          
+          echo firmware_version=${firmware_version} >> "$GITHUB_OUTPUT"
+          echo change_description=${change_description} >> "$GITHUB_OUTPUT"
 
       - name: Unzip the source file
         run: |
-          unzip -oj source.zip '*_source/*' -d ./temp_layout
-          mv ./temp_layout/* ./layouts/${{ github.event.inputs.layout_id }} || true
-          rm -rf ./temp_layout
+          unzip -oj source.zip '*_source/*' -d ${{ github.event.inputs.layout_id }}
           rm source.zip
 
       - name: Commit and Push changes
@@ -80,71 +69,83 @@ jobs:
           git commit -m "✨(oryx): ${{ steps.download-layout-source.outputs.change_description }}" || echo "No layout change"
           git push
 
-      - name: Merge Oryx with custom QMK (main)
+      - name: Merge Oryx with custom QMK
         run: |
           git fetch origin main
           git checkout -B main origin/main
           git merge -Xignore-all-space oryx
           git push
 
-      - name: Prepare qmk_firmware submodule (pointing to BE-Yang/qmk_firmware)
+      - name: Update QMK firmware submodule to latest version (${{ steps.download-layout-source.outputs.firmware_version }})
         run: |
-          # If you want to keep .gitmodules as-is, this is just to sync
-          git submodule update --init --recursive
-
-      - name: Update QMK firmware submodule to firmware25
-        run: |
-          if [ -d "qmk_firmware" ]; then
-            git submodule deinit -f qmk_firmware || true
-            rm -rf .git/modules/qmk_firmware
-            rm -rf qmk_firmware
-          fi
-
-          git submodule update --init --remote
-
-          cd qmk_firmware
-          git fetch origin
-          git checkout firmware25
-          git submodule sync --recursive
-          git submodule update --init --recursive
-          cd ..
-
-          git add qmk_firmware
-          git commit -m "✨(qmk): Update to firmware25 from fork" || echo "No QMK change"
-          git push
+            if [ -d "qmk_firmware" ]; then
+              git submodule deinit -f qmk_firmware || true
+              rm -rf .git/modules/qmk_firmware
+              rm -rf qmk_firmware
+            fi
+        
+            git submodule update --init --recursive
+        
+            cd qmk_firmware
+            git fetch origin
+            git checkout firmware25
+            git submodule sync --recursive
+            git submodule update --init --recursive
+            cd ..
+        
+            git add qmk_firmware
+            git commit -m "✨(qmk): Update firmware" || echo "No QMK change"
+            git push
 
       - name: Build qmk docker image
         run: docker build -t qmk .
 
-      - name: Build the layout (ergodox_ez:aWZZb)
+      - name: Build the layout
         id: build-layout
         run: |
-          # Copy the layout to qmk keymap
-          keymap_dir="qmk_firmware/keyboards/ergodox_ez/keymaps/aWZZb"
-          mkdir -p "${keymap_dir}"
-          cp -r "layouts/${{ github.event.inputs.layout_id }}/*" "${keymap_dir}/"
-
-          # Build
+          # Set keyboard directory and make prefix based on firmware version
+          if [ "${{ steps.download-layout-source.outputs.firmware_version }}" -ge 24 ]; then
+            keyboard_directory="qmk_firmware/keyboards/zsa"
+            make_prefix="zsa/"
+          else
+            keyboard_directory="qmk_firmware/keyboards"
+            make_prefix=""
+          fi
+          
+          # Copy layout files to the qmk folder
+          rm -rf ${keyboard_directory}/${{ github.event.inputs.layout_geometry }}/keymaps/${{ github.event.inputs.layout_id }}
+          mkdir -p ${keyboard_directory}/${{ github.event.inputs.layout_geometry }}/keymaps && cp -r ${{ github.event.inputs.layout_id }} "$_"
+          
+          # Build the layout
+          keyboard_dir="qmk_firmware/keyboards/ergodox_ez/glow"
+          keymap_dir="${keyboard_dir}/keymaps/${{ github.event.inputs.layout_id }}"
+          
+          rm -rf "$keymap_dir"
+          mkdir -p "$keymap_dir"
+          cp -r "./${{ github.event.inputs.layout_id }}/." "$keymap_dir/"
+          
           docker run -v ./qmk_firmware:/root --rm qmk /bin/sh -c "
             set -x
-            cd /root
-            make ergodox_ez:aWZZb
-          "
-
-          # Compute artifact name
-          keyboard_target="ergodox_ez"
+            # qmk setup zsa/qmk_firmware -b firmware${{ steps.download-layout-source.outputs.firmware_version }} -y
+            # make ${make_prefix}${{ github.event.inputs.layout_geometry }}:${{ github.event.inputs.layout_id }}
+            make ${make_prefix}${{ github.event.inputs.layout_geometry }}:${{ github.event.inputs.layout_id }}
+            "
+          
+          # Find and export built layout          
+          # Normalize layout name (slashes to underscores)
+          keyboard_target="$(basename "${{ github.event.inputs.layout_geometry }}")"
+          normalized_layout_geometry="ergodox_ez_${keyboard_target}"
           layout_id="${{ github.event.inputs.layout_id }}"
-          built_file="${keyboard_target}_${layout_id}.hex"
-
-          # Copy hex to qmk_firmware so upload step can reach it
-          cp "${built_file}" "qmk_firmware/${built_file}"
-
+          
+          # Construct expected filename
+          built_file="${normalized_layout_geometry}_${layout_id}.hex"
+          
+          # Export
           echo "built_layout_file=${built_file}" >> "$GITHUB_OUTPUT"
-          echo "keyboard_target=${keyboard_target}" >> "$GITHUB_OUTPUT"
-          echo "layout_id=${layout_id}" >> "$GITHUB_OUTPUT"
+          echo "normalized_layout_geometry=${normalized_layout_geometry}" >> "$GITHUB_OUTPUT"
 
       - name: Upload layout
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.build-layout.outputs.keyboard_target }}_${{ steps.build-layout.outputs.layout_id }}
-          path: qmk_firmware/${{ steps.build-layout.outputs.built_layout_file }}
+          name: ${{ steps.build-layout.outputs.normalized_layout_geometry }}_${{ github.event.inputs.layout_id }}
+          path: ${{ steps.build-layout.outputs.built_layout_file }}
